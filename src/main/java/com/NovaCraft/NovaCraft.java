@@ -41,6 +41,7 @@ import com.NovaCraft.world.nether.structure.MapGenNetherBridgeNovaCraft.Start;
 import com.NovaCraft.world.sculkshaft.WorldGenSculkedMineshaftInjector;
 import com.NovaCraft.world.sculkshaft.StructureSculkMineshaftPieces;
 import com.NovaCraft.world.stronghold.*;
+import com.NovaCraft.world.structure.NCRavineWorldGen;
 import com.NovaCraft.world.structure.WorldGenRavineInjector;
 import com.NovaCraftBlocks.NovaCraftBlocks;
 import com.NovaCraftBlocks.potion.NovaCraftLiquids;
@@ -53,17 +54,13 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import java.io.File;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.BiomeGenBase.SpawnListEntry;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.MinecraftForge;
@@ -108,7 +105,9 @@ public class NovaCraft {
         }
         MinecraftForge.TERRAIN_GEN_BUS.register(this);
         MinecraftForge.ORE_GEN_BUS.register(new OreGenEventHandler());
-        MinecraftForge.EVENT_BUS.register(new PopulateChunkEventHandler());
+        if (Configs.disableEmerald || Configs.disableMonsterEgg) {
+            MinecraftForge.EVENT_BUS.register(new PopulateChunkEventHandler());
+        }
 
         MinecraftForge.EVENT_BUS.register((Object)new NovaCraftBucketFillEvent());
 
@@ -163,7 +162,7 @@ public class NovaCraft {
             StructureSculkMineshaftPieces.registerStructurePieces();
             MinecraftForge.TERRAIN_GEN_BUS.register(new WorldGenSculkedMineshaftInjector());
         }
-        MinecraftForge.EVENT_BUS.register(new WorldGenRavineInjector());
+        MinecraftForge.TERRAIN_GEN_BUS.register(new WorldGenRavineInjector());
         GameRegistry.registerWorldGenerator(new MeteorCraterGen(), 0);
         GameRegistry.registerWorldGenerator(new NCWorldGeneratorVillages(), 0);
         EntitiesNovaCraft.initialization();
@@ -190,6 +189,7 @@ public class NovaCraft {
         GameRegistry.registerWorldGenerator(new NCWorldGeneratorPost(), Integer.MAX_VALUE);
         GameRegistry.registerWorldGenerator(NCWorldGeneratorPlants.INSTANCE, Integer.MAX_VALUE);
         GameRegistry.registerWorldGenerator(NCWorldGeneratorDeeperCaves.INSTANCE, Integer.MAX_VALUE);
+        NCRavineWorldGen.resolveBiomeFilter();
     }
 
     @EventHandler
@@ -206,7 +206,7 @@ public class NovaCraft {
     public void registerHardmodeMobs(World world) {
         for(int i = 0; i < BiomeGenBase.getBiomeGenArray().length; ++i) {
             BiomeGenBase biome = BiomeGenBase.getBiomeGenArray()[i];
-            if (biome != null && overworldBiome(biome)) {
+            if (biome != null && EntitiesNovaCraft.overworldBiome(biome)) {
                 if (ConfigsEntities.enableSpawnHardmodeCreeper) {
                     EntityRegistry.addSpawn(EntityHardmodeCreeper.class, 12, 3, 12, EnumCreatureType.monster, new BiomeGenBase[]{biome});
                 }
@@ -247,22 +247,6 @@ public class NovaCraft {
             }
         }
 
-    }
-
-    public static boolean overworldBiome(BiomeGenBase biome) {
-        List<SpawnListEntry> monsterList = (List)ObfuscationReflectionHelper.getPrivateValue(BiomeGenBase.class, biome, new String[]{"as", "field_76761_J", "spawnableMonsterList"});
-        Iterator var2 = monsterList.iterator();
-
-        SpawnListEntry entity;
-        do {
-            if (!var2.hasNext()) {
-                return false;
-            }
-
-            entity = (SpawnListEntry)var2.next();
-        } while(entity.entityClass != EntityZombie.class);
-
-        return true;
     }
 
     public static ResourceLocation locate(String location) {

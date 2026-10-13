@@ -12,7 +12,9 @@ public enum EnumFrogType {
         return this.ordinal();
     }
 
+    private static final EnumFrogType[] VALUES = values();
+
     public static EnumFrogType get(int id) {
-        return values()[id];
+        return VALUES[id];
     }
 }

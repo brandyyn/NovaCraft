@@ -413,12 +413,11 @@ public class EntityCrimsonDragon extends EntityFlying implements IBossDisplayDat
 
         }
 
-        List<Entity> volume = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(8, 8, 8));
+        if (this.worldObj.isRemote) {
+            List<EntityPlayer> players = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.boundingBox.expand(8, 8, 8));
 
-        for(Entity entity : volume) {
-            if(entity instanceof EntityPlayer && this.canEntityBeSeen(entity)) {
-                if (worldObj.isRemote)
-                    this.FireBreath();
+            for (EntityPlayer player : players) {
+                if (this.canEntityBeSeen(player)) this.FireBreath();
             }
         }
 

@@ -12,7 +12,9 @@ public enum EnumRavagerType {
         return this.ordinal();
     }
 
+    private static final EnumRavagerType[] VALUES = values();
+
     public static EnumRavagerType get(int id) {
-        return values()[id];
+        return VALUES[id];
     }
 }

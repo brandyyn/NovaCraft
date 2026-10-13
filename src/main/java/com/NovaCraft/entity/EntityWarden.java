@@ -97,29 +97,28 @@ public class EntityWarden extends EntityMob implements IBossDisplayData {
 	    }
 	
 	public void onLivingUpdate() {
-		int chance = (int)(1 + Math.random() * 30000);
-		List<Entity> volume = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(3, 3, 3));
+		if (!this.worldObj.isRemote) {
+			int chance = (int)(1 + Math.random() * 30000);
+			boolean slow = Configs.enableWardenSlowness && chance < 15000;
+			boolean weak = Configs.enableWardenWeakness && chance > 22500;
 
-		if (Configs.enableWardenSlowness && chance < 15000) {
-			for (Entity entity : volume) {
-				if (entity instanceof EntityPlayer && this.canEntityBeSeen(entity))
-					((EntityPlayer) entity).addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 1, true));
+			if (slow || weak) {
+				List<EntityPlayer> players = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.boundingBox.expand(3, 3, 3));
+
+				for (EntityPlayer player : players) {
+					if (!this.canEntityBeSeen(player)) continue;
+
+					if (slow) player.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 1, true));
+					if (weak) player.addPotionEffect(new PotionEffect(Potion.weakness.id, 100, 0, true));
+				}
+			}
+
+			if (isWet()) {
+				this.addPotionEffect(new PotionEffect(Potion.regeneration.id, 140, 3));
+				this.heal(10.0F);
 			}
 		}
 
-		if (Configs.enableWardenWeakness && chance > 22500) {
-			for (Entity entity : volume) {
-				if (entity instanceof EntityPlayer && this.canEntityBeSeen(entity))
-					((EntityPlayer) entity).addPotionEffect(new PotionEffect(Potion.weakness.id, 100, 0, true));
-			}
-		}
-
-        
-        if (isWet()) {
-            this.addPotionEffect(new PotionEffect(Potion.regeneration.id, 140, 3));
-            this.heal(10.0F);	
-		}
-		
 		super.onLivingUpdate();
 	}
 

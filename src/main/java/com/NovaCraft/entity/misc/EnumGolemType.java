@@ -11,7 +11,9 @@ public enum EnumGolemType {
         return this.ordinal();
     }
 
+    private static final EnumGolemType[] VALUES = values();
+
     public static EnumGolemType get(int id) {
-        return values()[id];
+        return VALUES[id];
     }
 }

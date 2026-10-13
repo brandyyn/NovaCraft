@@ -122,25 +122,18 @@ public class EntityPrisoner extends EntityAnimal implements IBossDisplayData
             this.summonMinions();
         }
 
-		List<Entity> volume = this.worldObj.getEntitiesWithinAABBExcludingEntity(this, this.boundingBox.expand(8, 8, 8));
-		{
-        for(Entity entity : volume) {
-        	if(entity instanceof EntityPlayer && this.canEntityBeSeen(entity)) ((EntityPlayer)entity).addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 0, true));
-        	}
+		if (!this.worldObj.isRemote) {
+			List<EntityPlayer> players = this.worldObj.getEntitiesWithinAABB(EntityPlayer.class, this.boundingBox.expand(8, 8, 8));
+
+			for (EntityPlayer player : players) {
+				if (!this.canEntityBeSeen(player)) continue;
+
+				player.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 0, true));
+				if (Configs.enableWardenSlowness) player.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 1, true));
+				if (Configs.enableWardenWeakness) player.addPotionEffect(new PotionEffect(Potion.weakness.id, 100, 0, true));
+			}
 		}
-        
-		if(Configs.enableWardenSlowness) {
-        for(Entity entity : volume) {
-        	if(entity instanceof EntityPlayer && this.canEntityBeSeen(entity)) ((EntityPlayer)entity).addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 100, 1, true));
-        	}
-		}
-        
-		if(Configs.enableWardenWeakness) {
-        for(Entity entity : volume) {
-        	if(entity instanceof EntityPlayer && this.canEntityBeSeen(entity)) ((EntityPlayer)entity).addPotionEffect(new PotionEffect(Potion.weakness.id, 100, 0, true));
-        	}
-		}
-		
+
 		super.onLivingUpdate();
 	}	
 	 

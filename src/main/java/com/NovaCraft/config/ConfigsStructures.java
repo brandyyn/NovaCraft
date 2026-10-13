@@ -17,6 +17,7 @@ public class ConfigsStructures {
     public static boolean enableMansion;
     public static boolean enableDeepoidFortress;
     public static boolean enableSculkInfestedMineshaft;
+    public static int sculkMineshaftChance;
     public static boolean enableMassiveCraters;
     public static boolean enableCraters;
     public static int vindicatorVillageSpawnRate;
@@ -58,6 +59,7 @@ public class ConfigsStructures {
         MansionValidDimension = conf.get("Overworld Structures", "Mansion Valid Dimension", new int[]{0}, "List Of Valid Dimensions Mansion can Generate in.").getIntList();
         enableMansion = conf.getBoolean("enableMansion", "Overworld Structures", true, "Enables Mansions to start generating 12k from spawn.(Default is 12k blocks)");
         enableSculkInfestedMineshaft = conf.getBoolean("enableSculkInfestedMineshaft", "Overworld Structures", true, "Enables Sculk Infested Mineshafts generation.");
+        sculkMineshaftChance = conf.getInt("sculkMineshaftChance", "Overworld Structures", 9, 1, 1000, "1 in X mineshafts become Sculk Infested Mineshafts. 1 makes every mineshaft sculk infested.");
         enableCraters = conf.getBoolean("enableCraters", "Overworld Structures", true, "Enables small craters in world generation.");
         enableMassiveCraters = conf.getBoolean("enableMassiveCraters", "Overworld Structures", true, "Enables massive craters in world generation.");
         vindicatorVillageSpawnRate = conf.get("Spawn Rate - Vindicator Villages", "Overworld Structures", 25).getInt();

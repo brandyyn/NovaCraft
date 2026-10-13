@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import com.NovaCraft.config.Configs;
 import com.NovaCraft.config.ConfigsCompact;
 import com.NovaCraft.config.ConfigsWorld;
 import com.NovaCraft.registry.OtherModBlocks;
@@ -16,13 +15,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntityMobSpawner;
-import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.MapGenStructureIO;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.gen.structure.StructureComponent;
-import net.minecraftforge.common.ChestGenHooks;
-import static net.minecraftforge.common.ChestGenHooks.*;
 
 public class StructureSculkMineshaftPieces {
     public static void registerStructurePieces()
@@ -101,6 +97,7 @@ public class StructureSculkMineshaftPieces {
             private boolean hasSculk2;
             private boolean hasSpiders;
             private boolean spawnerPlaced;
+            private static final boolean RAW_ORES_AVAILABLE = Loader.isModLoaded("etfuturum") && OtherModBlocks.raw_ore_block != null;
             private int sectionCount;
 
             public Corridor() {}
@@ -289,23 +286,32 @@ public class StructureSculkMineshaftPieces {
                 }
             }
 
-            protected boolean generateStructureChestContents(World world, StructureBoundingBox structureBoundingBox, Random random, int p_74879_4_, int p_74879_5_, int p_74879_6_, WeightedRandomChestContent[] p_74879_7_, int p_74879_8_)
+            private void placeCrate(World world, StructureBoundingBox structureBoundingBox, int x, int y, int z)
             {
-                int i1 = this.getXWithOffset(p_74879_4_, p_74879_6_);
-                int j1 = this.getYWithOffset(p_74879_5_);
-                int k1 = this.getZWithOffset(p_74879_4_, p_74879_6_);
+                int i1 = this.getXWithOffset(x, z);
+                int j1 = this.getYWithOffset(y);
+                int k1 = this.getZWithOffset(x, z);
 
                 if (structureBoundingBox.isVecInside(i1, j1, k1) && world.getBlock(i1, j1, k1).getMaterial() == Material.air)
                 {
-                    world.setBlock(i1, j1, k1, NovaCraftBlocks.mineshaft_chest, 0, 0);            
-                	                   
-            		return true;
+                    world.setBlock(i1, j1, k1, NovaCraftBlocks.mineshaft_chest, 0, 2);
                 }
-                else
-                {
-                    return false;
-                }
-               
+            }
+
+            private void placeQuad(World world, StructureBoundingBox bb, Random random, float chance, int y, int z0, int z1, Block block, int meta)
+            {
+                this.func_151552_a(world, bb, random, chance, 0, y, z0, block, meta);
+                this.func_151552_a(world, bb, random, chance, 2, y, z0, block, meta);
+                this.func_151552_a(world, bb, random, chance, 0, y, z1, block, meta);
+                this.func_151552_a(world, bb, random, chance, 2, y, z1, block, meta);
+            }
+
+            private void placeOreQuad(World world, StructureBoundingBox bb, Random random, int y, int z0, int z1, Block first, int firstMeta, Block middle, int middleMeta, Block last, int lastMeta)
+            {
+                this.func_151552_a(world, bb, random, 0.05F, 0, y, z0, first, firstMeta);
+                this.func_151552_a(world, bb, random, 0.05F, 2, y, z0, middle, middleMeta);
+                this.func_151552_a(world, bb, random, 0.05F, 0, y, z1, middle, middleMeta);
+                this.func_151552_a(world, bb, random, 0.05F, 2, y, z1, last, lastMeta);
             }
 
             public boolean addComponentParts(World world, Random random, StructureBoundingBox structureBoundingBox)
@@ -321,6 +327,7 @@ public class StructureSculkMineshaftPieces {
                     boolean flag2 = false;
                     boolean flag3 = true;
                     int i = this.sectionCount * 5 - 1;
+                    boolean useRawOres = RAW_ORES_AVAILABLE && ConfigsCompact.enableRawOreBlocks;
                     this.fillWithBlocks(world, structureBoundingBox, 0, 0, 0, 2, 1, i, Blocks.air, Blocks.air, false);
                     this.randomlyFillWithBlocks(world, structureBoundingBox, random, 0.8F, 0, 2, 0, 2, 2, i, Blocks.air, Blocks.air, false);
 
@@ -348,99 +355,32 @@ public class StructureSculkMineshaftPieces {
                             this.fillWithBlocks(world, structureBoundingBox, 0, 2, k, 2, 2, k, NovaCraftBlocks.grimstone_bricks, Blocks.air, false);
                         }
 
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 0, 2, k - 1, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 2, 2, k - 1, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 0, 2, k + 1, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 2, 2, k + 1, NovaCraftBlocks.sculk_block, 0);
-                        
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 0, j - 3, k - 1, NovaCraftBlocks.sculk_block, 0); //new
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 2, j - 3, k - 1, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 0, j - 3, k + 1, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 2, j - 3, k + 1, NovaCraftBlocks.sculk_block, 0);
-                        
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 0, j - 3, k - 2, NovaCraftBlocks.sculk_block, 0); //new
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 2, j - 3, k - 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 0, j - 3, k + 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.3F, 2, j - 3, k + 2, NovaCraftBlocks.sculk_block, 0);
-                        
-                        this.func_151552_a(world, structureBoundingBox, random, 0.1F, 0, j - 2, k - 2, NovaCraftBlocks.sculk_block, 0); //new
-                        this.func_151552_a(world, structureBoundingBox, random, 0.1F, 2, j - 2, k - 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.1F, 0, j - 2, k + 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.1F, 2, j - 2, k + 2, NovaCraftBlocks.sculk_block, 0);
-                        
-                        this.func_151552_a(world, structureBoundingBox, random, 0.1F, i - 2, j - 2, 0, NovaCraftBlocks.sculk_block, 0); //new
+                        this.placeQuad(world, structureBoundingBox, random, 0.3F, 2, k - 1, k + 1, NovaCraftBlocks.sculk_block, 0);
+                        this.placeQuad(world, structureBoundingBox, random, 0.3F, j - 3, k - 1, k + 1, NovaCraftBlocks.sculk_block, 0);
+                        this.placeQuad(world, structureBoundingBox, random, 0.3F, j - 3, k - 2, k + 2, NovaCraftBlocks.sculk_block, 0);
+                        this.placeQuad(world, structureBoundingBox, random, 0.1F, j - 2, k - 2, k + 2, NovaCraftBlocks.sculk_block, 0);
+
+                        this.func_151552_a(world, structureBoundingBox, random, 0.1F, i - 2, j - 2, 0, NovaCraftBlocks.sculk_block, 0);
                         this.func_151552_a(world, structureBoundingBox, random, 0.1F, i - 2, j - 2, 2, NovaCraftBlocks.sculk_block, 0);
                         this.func_151552_a(world, structureBoundingBox, random, 0.1F, i + 2, j - 2, 0, NovaCraftBlocks.sculk_block, 0);
                         this.func_151552_a(world, structureBoundingBox, random, 0.1F, i + 2, j - 2, 2, NovaCraftBlocks.sculk_block, 0);
-                        
+
+                        Block deepOre = ConfigsWorld.enableBrimstoneOre ? NovaCraftBlocks.brimstone_ore : Blocks.iron_ore;
+                        this.placeQuad(world, structureBoundingBox, random, 0.08F, j - 3, k - 3, k + 3, deepOre, 0);
+                        this.placeQuad(world, structureBoundingBox, random, 0.08F, j - 4, k - 2, k + 2, deepOre, 0);
+
+                        if (useRawOres)
                         {
-                        if (ConfigsWorld.enableBrimstoneOre) {
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 3, k - 3, NovaCraftBlocks.brimstone_ore, 0); //new
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 3, k - 3, NovaCraftBlocks.brimstone_ore, 0);
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 3, k + 3, NovaCraftBlocks.brimstone_ore, 0);
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 3, k + 3, NovaCraftBlocks.brimstone_ore, 0);
-                        
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 4, k - 2, NovaCraftBlocks.brimstone_ore, 0); //new
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 4, k - 2, NovaCraftBlocks.brimstone_ore, 0);
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 4, k + 2, NovaCraftBlocks.brimstone_ore, 0);
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 4, k + 2, NovaCraftBlocks.brimstone_ore, 0);
+                            this.placeOreQuad(world, structureBoundingBox, random, j + 3, k - 3, k + 3, OtherModBlocks.raw_ore_block, 0, OtherModBlocks.raw_ore_block, 1, OtherModBlocks.raw_ore_block, 2);
+                            this.placeOreQuad(world, structureBoundingBox, random, -1, k - 2, k + 2, OtherModBlocks.raw_ore_block, 0, OtherModBlocks.raw_ore_block, 1, OtherModBlocks.raw_ore_block, 2);
                         }
-                        else {
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 3, k - 3, Blocks.iron_ore, 0); //new
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 3, k - 3, Blocks.iron_ore, 0);
-                        	this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 3, k + 3, Blocks.iron_ore, 0);
-                            this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 3, k + 3, Blocks.iron_ore, 0);
-                            
-                            this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 4, k - 2, Blocks.iron_ore, 0); //new
-                            this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 4, k - 2, Blocks.iron_ore, 0);
-                            this.func_151552_a(world, structureBoundingBox, random, 0.08F, 0, j - 4, k + 2, Blocks.iron_ore, 0);
-                            this.func_151552_a(world, structureBoundingBox, random, 0.08F, 2, j - 4, k + 2, Blocks.iron_ore, 0);	
-                         }
-                        }
-                        
+                        else
                         {
-                            try {
-                                if (Loader.isModLoaded("etfuturum") && ConfigsCompact.enableRawOreBlocks) {
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, j + 3, k - 3, OtherModBlocks.raw_ore_block, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, j + 3, k - 3, OtherModBlocks.raw_ore_block, 1);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, j + 3, k + 3, OtherModBlocks.raw_ore_block, 1);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, j + 3, k + 3, OtherModBlocks.raw_ore_block, 2);
-
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, -1, k - 2, OtherModBlocks.raw_ore_block, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, -1, k - 2, OtherModBlocks.raw_ore_block, 1);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, -1, k + 2, OtherModBlocks.raw_ore_block, 1);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, -1, k + 2, OtherModBlocks.raw_ore_block, 2);
-                                } else {
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, j + 3, k - 3, Blocks.iron_ore, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, j + 3, k - 3, Blocks.iron_ore, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, j + 3, k + 3, Blocks.iron_ore, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, j + 3, k + 3, Blocks.gold_ore, 0);
-
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, -1, k - 2, Blocks.iron_ore, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, -1, k - 2, Blocks.iron_ore, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, -1, k + 2, Blocks.iron_ore, 0);
-                                    this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, -1, k + 2, Blocks.gold_ore, 0);
-                                }
-                            } catch (Exception ex) {
-                                if (Configs.enableDebugMode) {
-                                    System.out.println("Missing Raw Ore Blocks from Et Futurum Requiem, using Vanilla Ores instead...");
-                                }
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, j + 3, k - 3, Blocks.iron_ore, 0);
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, j + 3, k - 3, Blocks.iron_ore, 0);
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, j + 3, k + 3, Blocks.iron_ore, 0);
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, j + 3, k + 3, Blocks.gold_ore, 0);
-
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, -1, k - 2, Blocks.iron_ore, 0);
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, -1, k - 2, Blocks.iron_ore, 0);
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, -1, k + 2, Blocks.iron_ore, 0);
-                                this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, -1, k + 2, Blocks.gold_ore, 0);
-                            }
+                            this.placeOreQuad(world, structureBoundingBox, random, j + 3, k - 3, k + 3, Blocks.iron_ore, 0, Blocks.iron_ore, 0, Blocks.gold_ore, 0);
+                            this.placeOreQuad(world, structureBoundingBox, random, -1, k - 2, k + 2, Blocks.iron_ore, 0, Blocks.iron_ore, 0, Blocks.gold_ore, 0);
                         }
-                        
-                        this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, 2, k - 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, 2, k - 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.05F, 0, 2, k + 2, NovaCraftBlocks.sculk_block, 0);
-                        this.func_151552_a(world, structureBoundingBox, random, 0.05F, 2, 2, k + 2, NovaCraftBlocks.sculk_block, 0);
+
+                        this.placeQuad(world, structureBoundingBox, random, 0.05F, 2, k - 2, k + 2, NovaCraftBlocks.sculk_block, 0);
                         
                         this.func_151552_a(world, structureBoundingBox, random, 0.05F, 1, 2, k - 1, NovaCraftBlocks.sculk_spike, 0);
                         this.func_151552_a(world, structureBoundingBox, random, 0.05F, 1, 2, k + 1, NovaCraftBlocks.sculk_spike, 0);
@@ -491,17 +431,14 @@ public class StructureSculkMineshaftPieces {
                                 break;
                         }
                 		
-                		ChestGenHooks info = ChestGenHooks.getInfo(MINESHAFT_CORRIDOR);                    
-                        int k3;
-                        k3 = 2 + j * 5;
                         if (random.nextInt(50) == 0)
                         {
-                            this.generateStructureChestContents(world, structureBoundingBox, random, 2, 0, k3 - 1, info.getItems(random), info.getCount(random));
+                            this.placeCrate(world, structureBoundingBox, 2, 0, k - 1);
                         }
-                        
+
                         if (random.nextInt(50) == 0)
                         {
-                        	this.generateStructureChestContents(world, structureBoundingBox, random, 2, 0, k3 - 1, info.getItems(random), info.getCount(random));
+                            this.placeCrate(world, structureBoundingBox, 2, 0, k - 1);
                         }
 
                         if (this.hasSpiders && !this.spawnerPlaced)
@@ -539,7 +476,7 @@ public class StructureSculkMineshaftPieces {
                                 int l2 = this.getYWithOffset(0);
                                 int i12 = k - 1 + random.nextInt(3);
                                 int j12 = this.getXWithOffset(1, i12);
-                                i1 = this.getZWithOffset(1, i12);
+                                i12 = this.getZWithOffset(1, i12);
 
                                 if (structureBoundingBox.isVecInside(j12, l2, i12))
                                 {

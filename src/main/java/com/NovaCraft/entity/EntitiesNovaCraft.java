@@ -1,7 +1,6 @@
 package com.NovaCraft.entity;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import com.NovaCraft.config.ConfigsEntities;
 import com.NovaCraft.entity.CrimsonDragon.EntityCrimsonDragon;
@@ -21,7 +20,6 @@ import com.NovaCraft.entity.hardmode.EntityHardmodeZombie;
 import com.NovaCraft.entity.illager.EntityIllagerChief;
 import com.NovaCraft.entity.illager.EntityIllagerTrader;
 import com.NovaCraft.entity.illager.EntityVindicator;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import net.minecraft.entity.Entity;
@@ -354,9 +352,8 @@ public class EntitiesNovaCraft {
 	}
 	
 	public static boolean overworldBiome(BiomeGenBase biome) {
-	    List<SpawnListEntry> monsterList = ObfuscationReflectionHelper.getPrivateValue(BiomeGenBase.class, biome, "as", "field_76761_J", "spawnableMonsterList");
-	    for(SpawnListEntry entity : monsterList) {
-	        if(entity.entityClass == EntityZombie.class) return true;
+	    for (Object entry : biome.getSpawnableList(EnumCreatureType.monster)) {
+	        if (((SpawnListEntry) entry).entityClass == EntityZombie.class) return true;
 	    }
 	    return false;
 	}

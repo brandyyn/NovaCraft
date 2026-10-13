@@ -1,7 +1,9 @@
 package com.NovaCraft.world;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import com.NovaCraft.config.Configs;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -11,25 +13,38 @@ public class PopulateChunkEventHandler
     @SubscribeEvent
     public void onPopulateChunkEvent(PopulateChunkEvent.Post event)
     {
-        if (Configs.disableEmerald == true || Configs.disableMonsterEgg == true)
+        boolean removeEmerald = Configs.disableEmerald;
+        boolean removeMonsterEgg = Configs.disableMonsterEgg;
+
+        if (!removeEmerald && !removeMonsterEgg)
         {
-            World world = event.world;
-            int endX = (event.chunkX * 16) + 16;
-            int endZ = (event.chunkZ * 16) + 16;
+            return;
+        }
 
-            //Get the highest possibly existing block location
-            int maxY = event.chunkProvider.provideChunk(event.chunkX, event.chunkZ).getTopFilledSegment() + 15;
+        World world = event.world;
+        int baseX = event.chunkX * 16;
+        int baseZ = event.chunkZ * 16;
 
-            for (int x = event.chunkX * 16; x < endX; ++x)
+        for (ExtendedBlockStorage storage : world.getChunkFromChunkCoords(event.chunkX, event.chunkZ).getBlockStorageArray())
+        {
+            if (storage == null || storage.isEmpty())
             {
-                for (int z = event.chunkZ * 16; z < endZ; ++z)
+                continue;
+            }
+
+            int baseY = storage.getYLocation();
+
+            for (int y = 0; y < 16; ++y)
+            {
+                for (int z = 0; z < 16; ++z)
                 {
-                    for (int y = 0; y < maxY; ++y)
+                    for (int x = 0; x < 16; ++x)
                     {
-                        if ((Configs.disableEmerald && world.getBlock(x, y, z) == Blocks.emerald_ore)
-                            || (Configs.disableMonsterEgg && world.getBlock(x, y, z) == Blocks.monster_egg))
+                        Block block = storage.getBlockByExtId(x, y, z);
+
+                        if ((removeEmerald && block == Blocks.emerald_ore) || (removeMonsterEgg && block == Blocks.monster_egg))
                         {
-                            world.setBlock(x, y, z, Blocks.stone, 0, 2);
+                            world.setBlock(baseX + x, baseY + y, baseZ + z, Blocks.stone, 0, 2);
                         }
                     }
                 }

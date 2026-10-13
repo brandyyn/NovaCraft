@@ -13,8 +13,10 @@ public enum EnumCrystalSlimeType {
         return this.ordinal();
     }
 
+    private static final EnumCrystalSlimeType[] VALUES = values();
+
     public static EnumCrystalSlimeType get(int id) {
 
-        return values()[id];
+        return VALUES[id];
     }
 }

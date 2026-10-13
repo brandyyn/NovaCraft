@@ -206,8 +206,6 @@ public class EntityCrystalSlime extends EntityLiving implements IMob {
                 this.func_146077_cc();
             }
         }
-
-        super.onUpdate();
     }
 
     protected void updateEntityActionState()

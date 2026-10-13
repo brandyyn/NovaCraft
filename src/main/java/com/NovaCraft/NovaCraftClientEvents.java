@@ -1,5 +1,6 @@
 package com.NovaCraft;
 
+import java.lang.reflect.Field;
 
 import com.NovaCraft.Items.NovaCraftItems;
 import com.NovaCraft.config.Configs;
@@ -27,6 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.*;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -41,6 +43,15 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 
 public class NovaCraftClientEvents {
+
+	private static final Field CREEPER_FUSE_TIME = ReflectionHelper.findField(EntityCreeper.class, "fuseTime", "field_82225_f");
+	private static final Field CREEPER_TIME_SINCE_IGNITED = ReflectionHelper.findField(EntityCreeper.class, "timeSinceIgnited", "field_70833_d");
+
+	private static final String[] CAVE_SOUNDS = {"nova_craft:ambient.cave_new1", "nova_craft:ambient.cave_new2", "nova_craft:ambient.cave_new3",
+			"nova_craft:ambient.cave_new4", "nova_craft:ambient.cave_new5", "nova_craft:ambient.cave_new6", "nova_craft:ambient.cave_new7",
+			"nova_craft:ambient.cave_new8", "nova_craft:ambient.cave_new9", "nova_craft:ambient.cave_new10", "nova_craft:ambient.cave_new11",
+			"nova_craft:ambient.cave_new12", "nova_craft:ambient.cave_new13"};
+
 
 	@SubscribeEvent
 	public void onInitMapGen(InitMapGenEvent event) {
@@ -76,8 +87,8 @@ public class NovaCraftClientEvents {
 		if (world.isRemote) return;
 
 		try {
-			int fuseTime = ReflectionHelper.getPrivateValue(EntityCreeper.class, creeper, "fuseTime", "field_82225_f");
-			int timeSinceIgnited = ReflectionHelper.getPrivateValue(EntityCreeper.class, creeper, "timeSinceIgnited", "field_70833_d");
+			int fuseTime = CREEPER_FUSE_TIME.getInt(creeper);
+			int timeSinceIgnited = CREEPER_TIME_SINCE_IGNITED.getInt(creeper);
 
 			if (timeSinceIgnited >= fuseTime) {
 				float healthPercent = creeper.getHealth() / creeper.getMaxHealth();
@@ -218,71 +229,58 @@ public class NovaCraftClientEvents {
 	
 	@SubscribeEvent
 	public void onWorldTick(TickEvent.WorldTickEvent event) {
-	    if (Configs.enableGlowingObsidian) { //Sure there is a better way to do this but it just works for now
-	    	
-	    if (event.phase != TickEvent.Phase.END || event.world.isRemote) return;
-	    
-	    int radius = 6;	    
-	    int radiusSq = radius * radius;
+		if (!Configs.enableGlowingObsidian || event.phase != TickEvent.Phase.END || event.world.isRemote) return;
 
-	    for (Object obj : event.world.playerEntities) {
-	        EntityPlayer player = (EntityPlayer) obj;
+		World world = event.world;
+		long time = world.getTotalWorldTime();
 
-	        int px = (int) player.posX;
-	        int py = (int) player.posY;
-	        int pz = (int) player.posZ;
+		for (Object obj : world.playerEntities) {
+			EntityPlayer player = (EntityPlayer) obj;
+			int dy = (int) ((time + player.getEntityId()) % 13) - 6;
+			int y = (int) player.posY + dy;
+			if (y < 1 || y > 255) continue;
 
-	        for (int x = px - radius; x <= px + radius; x++) {
-	            for (int y = py - radius; y <= py + radius; y++) {
-	                for (int z = pz - radius; z <= pz + radius; z++) {
-	                    int dx = x - px;
-	                    int dy = y - py;
-	                    int dz = z - pz;
+			int px = (int) player.posX;
+			int pz = (int) player.posZ;
+			int layerRadiusSq = 36 - dy * dy;
 
-	                    if (dx * dx + dy * dy + dz * dz <= radiusSq) {
-	                        Block block = event.world.getBlock(x, y, z);
-	                        if (block == Blocks.obsidian) {
-	                            Block below = event.world.getBlock(x, y - 1, z);
-	                            int meta = event.world.getBlockMetadata(x, y - 1, z);
-	                            if (below == Blocks.lava && meta == 0) {
-	                                event.world.setBlock(x, y, z, NovaCraftBlocks.glowing_obsidian);
-	                            }
-	                        }
-	                    }
-	                }
-	            }
-	        }
-	    }
-	  }
+			for (int x = px - 6; x <= px + 6; x++) {
+				int remaining = layerRadiusSq - (x - px) * (x - px);
+				if (remaining < 0) continue;
+
+				for (int z = pz - 6; z <= pz + 6; z++) {
+					if ((z - pz) * (z - pz) > remaining) continue;
+
+					Chunk chunk = world.getChunkFromBlockCoords(x, z);
+					int cx = x & 15;
+					int cz = z & 15;
+
+					if (chunk.getBlock(cx, y, cz) == Blocks.obsidian && chunk.getBlock(cx, y - 1, cz) == Blocks.lava && chunk.getBlockMetadata(cx, y - 1, cz) == 0) {
+						world.setBlock(x, y, z, NovaCraftBlocks.glowing_obsidian);
+					}
+				}
+			}
+		}
 	}
+
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
-	public void onClientWorldTick(TickEvent.WorldTickEvent event) {
-
-		if (!Configs.enableNewCaveSounds) return;
-		if (event.phase != TickEvent.Phase.END) return;
-		if (!event.world.isRemote) return;
+	public void onClientTick(TickEvent.ClientTickEvent event) {
+		if (!Configs.enableNewCaveSounds || event.phase != TickEvent.Phase.END) return;
 
 		Minecraft mc = Minecraft.getMinecraft();
 		EntityPlayer player = mc.thePlayer;
-		if (player == null) return;
+		if (player == null || mc.theWorld == null || mc.isGamePaused()) return;
 
 		if (player.dimension == -1 || player.dimension == 1) return;
 
-		int x = MathHelper.floor_double(player.posX);
-		int y = MathHelper.floor_double(player.posY);
-		int z = MathHelper.floor_double(player.posZ);
+		if (mc.theWorld.rand.nextInt(22000) == 0) {
+			int x = MathHelper.floor_double(player.posX);
+			int y = MathHelper.floor_double(player.posY);
+			int z = MathHelper.floor_double(player.posZ);
 
-		if (event.world.rand.nextInt(22000) == 0) {
-			if (event.world.getBlockLightValue(x, y, z) <= 0 && y < 32) {
-
-				String[] NewCaveSounds = {"nova_craft:ambient.cave_new1", "nova_craft:ambient.cave_new2", "nova_craft:ambient.cave_new3",
-						"nova_craft:ambient.cave_new4", "nova_craft:ambient.cave_new5", "nova_craft:ambient.cave_new6", "nova_craft:ambient.cave_new7",
-						"nova_craft:ambient.cave_new8", "nova_craft:ambient.cave_new9", "nova_craft:ambient.cave_new10", "nova_craft:ambient.cave_new11",
-						"nova_craft:ambient.cave_new12", "nova_craft:ambient.cave_new13"};
-
-				String chosen = NewCaveSounds[event.world.rand.nextInt(NewCaveSounds.length)];
-				player.playSound(chosen, 1.0F, 1.0F);
+			if (mc.theWorld.getBlockLightValue(x, y, z) <= 0 && y < 32) {
+				player.playSound(CAVE_SOUNDS[mc.theWorld.rand.nextInt(CAVE_SOUNDS.length)], 1.0F, 1.0F);
 			}
 		}
 	}

@@ -78,6 +78,19 @@ public class ConfigsWorld {
 
     //New Ore Generation and Decoration
     public static boolean enableBrimstoneOre;
+    public static int ravineChance;
+    public static int tallRavineChance;
+    public static float ravineHeightScale;
+    public static float tallRavineHeightScale;
+    public static boolean ravinesCarveSand;
+    public static boolean ravinesCarveRedSand;
+    public static boolean ravinesCarveSandstone;
+    public static boolean ravinesCarveHardenedClay;
+    public static int ravineMaxStartY;
+    public static String[] ravineBiomeWhitelist;
+    public static String[] ravineBiomeBlacklist;
+    public static int tallBiomeRavineMaxStartY;
+    public static float tallBiomeRavineMinBaseHeight;
     public static boolean enableVaniteOre;
     public static boolean enablePherithiumGeneration;
     public static boolean enablePherithiumOreGeneration;
@@ -164,6 +177,19 @@ public class ConfigsWorld {
 
         enableExtraEmeraldOreGeneration = conf.getBoolean("enableExtraEmeraldOreGeneration", "Overworld Decoration", true, "Enables Emerald Ore to rarely generate in all biomes from y = 0 to y = 90");
         enableBrimstoneOre = conf.getBoolean("enableBrimstoneOre", "Overworld Decoration", true, "Enables Brimstone Ore generation");
+        ravineChance = conf.getInt("ravineChance", "Overworld Decoration", 50, 1, 10000, "1 in X chunks start a ravine. Vanilla is 50.");
+        tallRavineChance = conf.getInt("tallRavineChance", "Overworld Decoration", 22, 1, 10000, "1 in X ravines are tall NovaCraft ravines; the rest are regular ravines.");
+        ravineHeightScale = conf.getFloat("ravineHeightScale", "Overworld Decoration", 1.5F, 0.1F, 10.0F, "Height scale of regular ravines. Vanilla is 3.0.");
+        tallRavineHeightScale = conf.getFloat("tallRavineHeightScale", "Overworld Decoration", 4.0F, 0.1F, 10.0F, "Height scale of tall NovaCraft ravines.");
+        ravinesCarveSand = conf.getBoolean("ravinesCarveSand", "Overworld Decoration", false, "Lets ravines carve sand. Off by default so desert sand hangs over ravines and falls in when a block update reaches it to make deserts more dangerous.");
+        ravinesCarveRedSand = conf.getBoolean("ravinesCarveRedSand", "Overworld Decoration", true, "Lets ravines carve red sand. Detected by biome.");
+        ravinesCarveSandstone = conf.getBoolean("ravinesCarveSandstone", "Overworld Decoration", true, "Lets ravines carve sandstone (so the sand above is left hanging).");
+        ravinesCarveHardenedClay = conf.getBoolean("ravinesCarveHardenedClay", "Overworld Decoration", true, "Lets ravines carve hardened and stained hardened clay, such as the clay bands in Mesa.");
+        ravineBiomeWhitelist = conf.getStringList("ravineBiomeWhitelist", "Overworld Decoration", new String[0], "Biome names or IDs ravines may start in. Leave empty to allow every biome.");
+        ravineBiomeBlacklist = conf.getStringList("ravineBiomeBlacklist", "Overworld Decoration", new String[0], "Biome names or IDs ravines may not start in. Applied after the whitelist.");
+        ravineMaxStartY = conf.getInt("ravineMaxStartY", "Overworld Decoration", 70, 27, 250, "Highest Y a ravine can start at in normal biomes. Vanilla is about 66.");
+        tallBiomeRavineMaxStartY = conf.getInt("tallBiomeRavineMaxStartY", "Overworld Decoration", 146, 27, 250, "Highest Y a ravine can start at in tall-terrain biomes such as Extreme Hills.");
+        tallBiomeRavineMinBaseHeight = conf.getFloat("tallBiomeRavineMinBaseHeight", "Overworld Decoration", 0.8F, -2.0F, 5.0F, "Biomes with a base height at or above this count as tall-terrain. Extreme Hills is 1.0, Plains 0.125, Ocean -1.0.");
         enableVaniteOre = conf.getBoolean("enableVaniteOre", "Overworld Decoration", true, "Enables Vanite Ore generation");
         enablePherithiumGeneration = conf.getBoolean("enablePherithiumGeneration", "Overworld Decoration", true, "Enables pherithium stalagmites and stalagtites generation.");
         enablePherithiumOreGeneration = conf.getBoolean("enablePherithiumOreGeneration", "Overworld Decoration", false, "Enables pherithium ore to generate, by default it is set to false.");
